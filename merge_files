@@ -1,0 +1,164 @@
+#include <iostream>
+#include<fstream>
+#include<vector>
+
+void writeFile(std::string path,int size){
+    std::fstream fs;
+    fs.open(path,std::fstream::out);
+    for(int i=0; i!= size;++i){
+        int num =std::rand();
+        fs<<num<<"\n";
+    }
+    fs.close();
+}
+
+void divAndSort (std::fstream &read, int size,int &fileCount){
+    
+    int num;
+    while(!read.eof()){
+            ++fileCount;
+            std::vector<int> divArr;
+            for(int i=0; i!= size; ++i){
+                read>>num;
+                if(read.eof()){
+                    break;
+                }
+                divArr.push_back(num);
+            }
+        int size1= divArr.size();
+        if(size1>0){
+            std::sort(divArr.begin(),divArr.end());
+            std::fstream divFile;
+            std::string countPart= std::to_string(fileCount);
+            std::string path1= countPart + ".txt";
+            divFile.open(path1,std::fstream::out);
+            for(int i=0; i!=size1; ++i){
+                divFile<<divArr[i]<<"\n";
+            }
+            divFile.close();
+            divAndSort(read,size,fileCount);
+        }
+    }
+}
+
+
+int writePathCounta (int num) {
+    int count=0;
+    int count1=1;
+    while(num>0){
+        num /= 10;
+        ++count;
+    }
+    for(int i=0;i<count;++i){
+        count1 *=10;
+    }
+    return count1;
+}
+
+
+
+
+
+void mergeFiles ( int writePathCount, int readFileCount, int fileCount, int sortFileCount){
+    
+    std::fstream writeFs;
+    std::string writePathCountPart= std::to_string(++writePathCount);
+    std::string writePath= writePathCountPart + ".txt";
+    writeFs.open(writePath,std::fstream::out);
+    ++sortFileCount;
+    std::fstream readFs1;
+    std::string readCountPart= std::to_string(++readFileCount);
+    std::string path1= readCountPart + ".txt";
+    readFs1.open(path1,std::fstream::in);
+    std::fstream readFs2;
+    readCountPart= std::to_string(++readFileCount);
+    std::string path2= readCountPart + ".txt";
+    readFs2.open(path2,std::fstream::in);
+    fileCount -=2;
+    int num1;
+    int num2;
+    readFs1>>num1;
+    readFs2>>num2;
+    while(!readFs1.eof() && !readFs2.eof()){
+        if(num1<=num2){
+            writeFs<<num1<<"\n";
+            readFs1>>num1;
+        }else{
+            writeFs<<num2<<"\n";
+            readFs2>>num2;
+        }
+    }
+    while(!readFs1.eof()){
+        readFs1>>num1;
+        if(readFs1.eof()){
+            break;
+        }
+        writeFs<<num1<<"\n";
+    }
+    while(!readFs2.eof()){
+        readFs2>>num2;
+        if(readFs2.eof()){
+            break;
+        }
+        writeFs<<num2<<"\n";
+    }
+    readFs1.close();
+    readFs2.close();
+    writeFs.close();
+    if(fileCount>1){
+        mergeFiles(writePathCount , readFileCount , fileCount , sortFileCount);
+    }
+    if(fileCount==1){
+        std::fstream writeF;
+        writePathCountPart= std::to_string(++writePathCount);
+        writePath= writePathCountPart + ".txt";
+        writeF.open(writePath,std::fstream::out);
+        ++sortFileCount;
+        std::fstream readF;
+        readCountPart= std::to_string(++readFileCount);
+        std::string path= readCountPart + ".txt";
+        readF.open(path,std::fstream::in);
+        int num;
+        while(!readF.eof()){
+            readF>>num;
+            if(readF.eof()){
+                break;
+            }
+            writeF<<num<<"\n";
+        }
+        fileCount=0;
+        writeF.close();
+        readF.close();
+    }
+    if(sortFileCount>1){
+        fileCount=sortFileCount;
+        sortFileCount=0;
+        readFileCount= writePathCounta(writePathCount)/10;
+        writePathCount= writePathCounta(writePathCount);
+        mergeFiles( writePathCount , readFileCount , fileCount , sortFileCount );
+    }
+}
+
+void bigBigSortForInt(std::string path,int maxSize){
+    std::fstream fs;
+    fs.open(path,std::fstream::in);
+    int fileCount=0;
+    divAndSort(fs,maxSize,fileCount);
+    if(fileCount>1){
+        int writePathCount = writePathCounta(fileCount);
+        mergeFiles(writePathCount, 0, fileCount, 0);
+    }
+}
+
+
+int main(){
+    
+    std::string path="arr1.txt";
+    int fileSize=105;
+    int maxSize =20;
+    
+    writeFile(path,fileSize);
+    bigBigSortForInt(path,maxSize);
+    
+    return 0;
+}
